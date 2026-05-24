@@ -1,0 +1,8 @@
+name = "Spotify"
+description = "Removes unnecessary Spotify caches from the system."
+type = "soft"
+
+[[targets]]
+reason = "Remove Spotify cache files. Spotify will recreate these files when it is launched again."
+kind = "absolute"
+path = "$HOME/Library/Caches/com.spotify.client/Data"

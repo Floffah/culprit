@@ -29,7 +29,11 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-		return viper.WriteConfig()
+		if !clean.IsCleaningCulprit {
+			return viper.WriteConfig()
+		}
+
+		return nil
 	},
 }
 

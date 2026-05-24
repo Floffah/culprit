@@ -1,3 +1,5 @@
+alias gen := generate
+
 default:
 	@just --list
 
@@ -13,3 +15,6 @@ lint:
 format:
 	gofmt -s -w .
 	golangci-lint fmt
+
+generate:
+	go generate ./...

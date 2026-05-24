@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var IsCleaningCulprit bool
+
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "clean [type]",
@@ -67,6 +69,8 @@ func RunE(cmd *cobra.Command, args []string) error {
 	log.Infof("Discovered %d recipes", len(recipes))
 
 	givenType := recipeTypeFromArgs(args)
+	IsCleaningCulprit = givenType == string(recipe.TypeCulprit)
+
 	usableRecipes := filterRecipesByType(recipes, givenType)
 
 	log.Infof("%d recipes are of type %s", len(usableRecipes), givenType)

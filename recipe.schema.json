@@ -1,0 +1,69 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/floffah/culprit/internal/recipe/recipe",
+ "$ref": "#/$defs/Recipe",
+ "$defs": {
+  "Recipe": {
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "The name of the recipe, must be unique across all recipes."
+    },
+    "description": {
+     "type": "string",
+     "description": "A brief description of the recipe."
+    },
+    "type": {
+     "type": "string",
+     "enum": [
+      "soft",
+      "hard",
+      "culprit"
+     ],
+     "description": "The type of the recipe."
+    },
+    "targets": {
+     "items": {
+      "$ref": "#/$defs/Target"
+     },
+     "type": "array",
+     "description": "The targets of the recipe."
+    }
+   },
+   "additionalProperties": false,
+   "type": "object",
+   "required": [
+    "name",
+    "description",
+    "type",
+    "targets"
+   ]
+  },
+  "Target": {
+   "properties": {
+    "reason": {
+     "type": "string",
+     "description": "The reason why this target should be cleaned up."
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "absolute"
+     ],
+     "description": "The kind of the target."
+    },
+    "path": {
+     "type": "string",
+     "description": "Absolute path to the file to be cleaned up"
+    }
+   },
+   "additionalProperties": false,
+   "type": "object",
+   "required": [
+    "reason",
+    "kind",
+    "path"
+   ]
+  }
+ }
+}
