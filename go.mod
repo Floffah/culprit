@@ -1,4 +1,4 @@
-module github.com/floffah/maculprit
+module github.com/floffah/culprit
 
 go 1.26
 

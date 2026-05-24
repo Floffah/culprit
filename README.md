@@ -20,14 +20,14 @@ You can build it yourself:
 ```bash
 git clone https://github.com/floffah/culprit.git
 cd culprit
-go build -o culprit cmds/maculprit/maculprit.go
+go build -o culprit cmds/culprit/culprit.go
 mv culprit /usr/local/bin/culprit
 ```
 
 OR install it with go
 
 ```bash
-go install github.com/floffah/culprit/cmds/maculprit@latest
+go install github.com/floffah/culprit/cmds/culprit@latest
 ```
 
 ## Usage

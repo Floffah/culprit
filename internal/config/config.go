@@ -10,18 +10,18 @@ import (
 const RecipesKey = "recipes"
 
 func SetupConfig() error {
-	viper.SetConfigName("maculprit")
-	viper.SetEnvPrefix("maculprit")
+	viper.SetConfigName("culprit")
+	viper.SetEnvPrefix("culprit")
 	viper.AutomaticEnv()
 
-	viper.AddConfigPath("$HOME/.maculprit")
+	viper.AddConfigPath("$HOME/.culprit")
 	viper.AddConfigPath(".")
 
 	viper.SetConfigType("toml")
 
-	viper.SetDefault(RecipesKey, "$HOME/.maculprit/recipes")
+	viper.SetDefault(RecipesKey, "$HOME/.culprit/recipes")
 
-	err := os.MkdirAll(os.ExpandEnv("$HOME/.maculprit"), 0755)
+	err := os.MkdirAll(os.ExpandEnv("$HOME/.culprit"), 0755)
 	if err != nil {
 		return err
 	}

@@ -1,8 +1,0 @@
-name = "Maculprit"
-description = "Deletes maculprit from the system."
-type = "maculprit"
-
-[[targets]]
-reason = "Remove config files and installed recipes when uninstalling maculprit."
-kind = "absolute"
-path = "$HOME/.maculprit"

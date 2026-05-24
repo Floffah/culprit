@@ -46,7 +46,7 @@ func validateRecipe(recipe Recipe, source string) (bool, error) {
 
 func validType(recipeType Type) bool {
 	switch recipeType {
-	case TypeSoft, TypeHard, TypeMaculprit:
+	case TypeSoft, TypeHard, TypeCulprit:
 		return true
 	default:
 		return false

@@ -1,0 +1,8 @@
+name = "Culprit"
+description = "Deletes culprit from the system."
+type = "culprit"
+
+[[targets]]
+reason = "Remove config files and installed recipes when uninstalling culprit."
+kind = "absolute"
+path = "$HOME/.culprit"

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/floffah/maculprit/internal/recipe"
+	"github.com/floffah/culprit/internal/recipe"
 )
 
 func RemovesToBash(removes []recipe.Remove) string {

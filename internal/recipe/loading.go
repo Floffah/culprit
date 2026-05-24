@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/floffah/maculprit/internal/config"
-	builtinRecipes "github.com/floffah/maculprit/recipes"
+	"github.com/floffah/culprit/internal/config"
+	builtinRecipes "github.com/floffah/culprit/recipes"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 )

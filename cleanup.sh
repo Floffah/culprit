@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-## Recipe: Maculprit
+## Recipe: Culprit
 
-# Reason: Remove config files and installed recipes when uninstalling maculprit.
-# Matcher: $HOME/.maculprit
+# Reason: Remove config files and installed recipes when uninstalling culprit.
+# Matcher: $HOME/.culprit
 # Size: 37.0 B
-rm -rf -- '/Users/ramsay/.maculprit'
-
+rm -rf -- '/Users/ramsay/.culprit'

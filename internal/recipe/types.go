@@ -3,9 +3,9 @@ package recipe
 type Type string
 
 const (
-	TypeSoft      Type = "soft"
-	TypeHard      Type = "hard"
-	TypeMaculprit Type = "maculprit"
+	TypeSoft    Type = "soft"
+	TypeHard    Type = "hard"
+	TypeCulprit Type = "culprit"
 )
 
 type Recipe struct {

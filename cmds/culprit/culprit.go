@@ -6,8 +6,8 @@ import (
 
 	"charm.land/fang/v2"
 	"charm.land/log/v2"
-	"github.com/floffah/maculprit/internal/cli/clean"
-	"github.com/floffah/maculprit/internal/config"
+	"github.com/floffah/culprit/internal/cli/clean"
+	"github.com/floffah/culprit/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -15,7 +15,7 @@ import (
 var isVerbose bool
 
 var rootCmd = &cobra.Command{
-	Use: "maculprit",
+	Use: "culprit",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if isVerbose {
 			log.SetLevel(log.DebugLevel)

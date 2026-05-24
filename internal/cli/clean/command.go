@@ -8,9 +8,9 @@ import (
 
 	"charm.land/huh/v2/spinner"
 	"charm.land/log/v2"
-	"github.com/floffah/maculprit/internal/recipe"
-	"github.com/floffah/maculprit/internal/shell"
-	"github.com/floffah/maculprit/internal/theming"
+	"github.com/floffah/culprit/internal/recipe"
+	"github.com/floffah/culprit/internal/shell"
+	"github.com/floffah/culprit/internal/theming"
 	"github.com/spf13/cobra"
 )
 
@@ -130,8 +130,6 @@ func RunE(cmd *cobra.Command, args []string) error {
 
 	if isTTY {
 		fmt.Println()
-		//fmt.Println(theming.MutedStyle().Render("⎯⎯⎯⎯⎯"))
-		//fmt.Println()
 		fmt.Println(theming.ScriptWrittenStyle().Render("Cleanup script created!"))
 		fmt.Print(theming.ScriptRunScriptBeforeStyle().Render("Run `"))
 		fmt.Print(theming.ScriptRunCommandStyle().Render("bash " + outputFilePath))

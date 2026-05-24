@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/floffah/maculprit/internal/recipe"
+	"github.com/floffah/culprit/internal/recipe"
 	"github.com/stretchr/testify/assert"
 )
 
