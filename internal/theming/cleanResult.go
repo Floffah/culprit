@@ -14,12 +14,12 @@ func ScriptWrittenStyle() lipgloss.Style {
 		Bold(true).
 		Background(lipgloss.Color("#064e3b")).
 		Padding(0, 1).
-		MarginLeft(5)
+		MarginLeft(2)
 }
 
 func ScriptRunScriptBeforeStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
-		MarginLeft(5)
+		MarginLeft(2)
 }
 
 func ScriptRunScriptAfterStyle() lipgloss.Style {
@@ -36,7 +36,6 @@ func DangerStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#dc2626")).
 		Bold(true).
-		MarginLeft(4).
-		Width(60).
-		Padding(0, 1)
+		MarginLeft(2).
+		Width(60)
 }

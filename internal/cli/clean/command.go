@@ -22,52 +22,52 @@ func NewCommand() *cobra.Command {
 		RunE:  RunE,
 	}
 	cmd.Flags().String("output", "cleanup.sh", "The output file to write the cleanup script to")
+	cmd.Flags().Bool("force", false, "Overwrite the output file if it already exists")
 
 	return cmd
 }
 
 func RunE(cmd *cobra.Command, args []string) error {
 	var recipes []recipe.Recipe
+	isTTY := theming.AreWeTTY()
 
-	err := spinner.New().
-		Title("Discovering recipes...").
-		WithTheme(theming.SpinnerTheme()).
-		ActionWithErr(func(ctx context.Context) error {
-			startedAt := time.Now()
+	if isTTY {
+		err := spinner.New().
+			Title("Discovering recipes...").
+			WithTheme(theming.SpinnerTheme()).
+			ActionWithErr(func(ctx context.Context) error {
+				startedAt := time.Now()
 
-			loadedRecipes, err := recipe.LoadAllRecipes()
-			if err != nil {
-				return err
-			}
-			recipes = loadedRecipes
+				loadedRecipes, err := recipe.LoadAllRecipes()
+				if err != nil {
+					return err
+				}
+				recipes = loadedRecipes
 
-			if time.Since(startedAt) < 500*time.Millisecond {
-				time.Sleep(500*time.Millisecond - time.Since(startedAt))
-			}
+				if time.Since(startedAt) < 500*time.Millisecond {
+					time.Sleep(500*time.Millisecond - time.Since(startedAt))
+				}
 
-			return nil
-		}).
-		Context(cmd.Context()).
-		Run()
+				return nil
+			}).
+			Context(cmd.Context()).
+			Run()
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+	} else {
+		loadedRecipes, err := recipe.LoadAllRecipes()
+		if err != nil {
+			return err
+		}
+		recipes = loadedRecipes
 	}
 
 	log.Infof("Discovered %d recipes", len(recipes))
 
-	givenType := "soft"
-
-	if len(args) > 0 {
-		givenType = args[0]
-	}
-
-	var usableRecipes []recipe.Recipe
-	for _, r := range recipes {
-		if string(r.Type) == givenType {
-			usableRecipes = append(usableRecipes, r)
-		}
-	}
+	givenType := recipeTypeFromArgs(args)
+	usableRecipes := filterRecipesByType(recipes, givenType)
 
 	log.Infof("%d recipes are of type %s", len(usableRecipes), givenType)
 
@@ -89,25 +89,29 @@ func RunE(cmd *cobra.Command, args []string) error {
 
 	var script string
 
-	err = spinner.New().
-		Title("Generating cleanup script...").
-		WithTheme(theming.SpinnerTheme()).
-		ActionWithErr(func(ctx context.Context) error {
-			startedAt := time.Now()
+	if isTTY {
+		err := spinner.New().
+			Title("Generating cleanup script...").
+			WithTheme(theming.SpinnerTheme()).
+			ActionWithErr(func(ctx context.Context) error {
+				startedAt := time.Now()
 
-			script = shell.RemovesToBash(allRemoves)
+				script = shell.RemovesToBash(allRemoves)
 
-			if time.Since(startedAt) < 500*time.Millisecond {
-				time.Sleep(500*time.Millisecond - time.Since(startedAt))
-			}
+				if time.Since(startedAt) < 500*time.Millisecond {
+					time.Sleep(500*time.Millisecond - time.Since(startedAt))
+				}
 
-			return nil
-		}).
-		Context(cmd.Context()).
-		Run()
+				return nil
+			}).
+			Context(cmd.Context()).
+			Run()
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+	} else {
+		script = shell.RemovesToBash(allRemoves)
 	}
 
 	outputFilePath, err := cmd.Flags().GetString("output")
@@ -115,30 +119,71 @@ func RunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputFile, err := os.OpenFile(outputFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer outputFile.Close()
-
-	_, err = outputFile.WriteString(script)
+	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return err
 	}
 
-	printCleanResult(outputFilePath)
+	if err := writeScriptFile(outputFilePath, script, force); err != nil {
+		return err
+	}
+
+	if isTTY {
+		fmt.Println()
+		//fmt.Println(theming.MutedStyle().Render("⎯⎯⎯⎯⎯"))
+		//fmt.Println()
+		fmt.Println(theming.ScriptWrittenStyle().Render("Cleanup script created!"))
+		fmt.Print(theming.ScriptRunScriptBeforeStyle().Render("Run `"))
+		fmt.Print(theming.ScriptRunCommandStyle().Render("bash " + outputFilePath))
+		fmt.Println(theming.ScriptRunScriptAfterStyle().Render("` to execute the cleanup script"))
+		fmt.Println()
+		fmt.Println(theming.DangerStyle().Render("⚠️  Make sure to review the cleanup script before running it, as it may contain destructive commands!"))
+	} else {
+		log.Infof("Cleanup script written to %q", outputFilePath)
+		log.Warnf("Make sure to review the cleanup script before running it, as it may contain destructive commands!")
+	}
 
 	return nil
 }
 
-func printCleanResult(atPath string) {
-	fmt.Println()
-	fmt.Println(theming.MutedStyle().Render("⎯⎯⎯⎯⎯"))
-	fmt.Println()
-	fmt.Println(theming.ScriptWrittenStyle().Render("Cleanup script created!"))
-	fmt.Print(theming.ScriptRunScriptBeforeStyle().Render("Run `"))
-	fmt.Print(theming.ScriptRunCommandStyle().Render("bash " + atPath))
-	fmt.Println(theming.ScriptRunScriptAfterStyle().Render("` to execute the cleanup script"))
-	fmt.Println()
-	fmt.Println(theming.DangerStyle().Render("⚠️  Make sure to review the cleanup script before running it, as it may contain destructive commands!"))
+func recipeTypeFromArgs(args []string) string {
+	if len(args) == 0 {
+		return string(recipe.TypeSoft)
+	}
+
+	return args[0]
+}
+
+func filterRecipesByType(recipes []recipe.Recipe, recipeType string) []recipe.Recipe {
+	var filtered []recipe.Recipe
+	for _, r := range recipes {
+		if string(r.Type) == recipeType {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
+
+func writeScriptFile(path, script string, force bool) error {
+	openFlags := os.O_CREATE | os.O_WRONLY | os.O_EXCL
+	if force {
+		openFlags = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	}
+
+	outputFile, err := os.OpenFile(path, openFlags, 0644)
+	if err != nil {
+		if os.IsExist(err) {
+			return fmt.Errorf("output file %q already exists, pass --force to overwrite it", path)
+		}
+		return err
+	}
+	defer func(outputFile *os.File) {
+		err := outputFile.Close()
+		if err != nil {
+			log.Errorf("Failed to close output file: %v", err)
+		}
+	}(outputFile)
+
+	_, err = outputFile.WriteString(script)
+	return err
 }

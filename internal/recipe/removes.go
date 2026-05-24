@@ -1,6 +1,7 @@
 package recipe
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -16,7 +17,8 @@ func DeriveRecipeRemoves(recipe Recipe) ([]Remove, error) {
 	var removes []Remove
 
 	for _, target := range recipe.Targets {
-		if target.Kind == TargetAbsolute {
+		switch target.Kind {
+		case TargetAbsolute:
 			matches, err := filepath.Glob(os.ExpandEnv(target.Path))
 			if err != nil {
 				return nil, err
@@ -30,6 +32,8 @@ func DeriveRecipeRemoves(recipe Recipe) ([]Remove, error) {
 					Path:       match,
 				})
 			}
+		default:
+			return nil, fmt.Errorf("recipe %q has unsupported target kind %q", recipe.Name, target.Kind)
 		}
 	}
 

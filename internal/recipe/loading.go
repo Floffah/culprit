@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/floffah/maculprit/internal/config"
@@ -33,6 +34,14 @@ func LoadAllRecipes() ([]Recipe, error) {
 			return nil, err
 		}
 
+		ok, err := validateRecipe(recipe, entry.Name())
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			continue
+		}
+
 		recipes = append(recipes, recipe)
 	}
 
@@ -48,7 +57,8 @@ func LoadAllRecipes() ([]Recipe, error) {
 			continue
 		}
 
-		data, err := os.ReadFile(recipesDir + "/" + entry.Name())
+		source := filepath.Join(recipesDir, entry.Name())
+		data, err := os.ReadFile(source)
 		if err != nil {
 			return nil, err
 		}
@@ -56,6 +66,14 @@ func LoadAllRecipes() ([]Recipe, error) {
 		var recipe Recipe
 		if err := toml.Unmarshal(data, &recipe); err != nil {
 			return nil, err
+		}
+
+		ok, err := validateRecipe(recipe, source)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			continue
 		}
 
 		recipes = append(recipes, recipe)

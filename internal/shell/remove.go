@@ -4,12 +4,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/floffah/maculprit/internal/recipe"
 )
 
 func RemovesToBash(removes []recipe.Remove) string {
-	var script string
+	var script strings.Builder
+
+	script.WriteString("#!/usr/bin/env bash\n")
+	script.WriteString("set -euo pipefail\n\n")
 
 	var previousRecipeName string
 	for _, remove := range removes {
@@ -19,17 +23,54 @@ func RemovesToBash(removes []recipe.Remove) string {
 		}
 
 		if remove.RecipeName != previousRecipeName {
-			script += "# -- Recipe: " + remove.RecipeName + " --\n\n"
+			script.WriteString("#")
+			writeComment(&script, "Recipe", remove.RecipeName)
+			script.WriteString("\n")
 			previousRecipeName = remove.RecipeName
 		}
 
-		script += "# Reason: " + remove.Reason + "\n"
-		script += "# Matcher: " + remove.Matcher + "\n"
-		script += "# Size: " + formatSize(removeSize) + "\n"
-		script += "rm -rf " + strconv.Quote(remove.Path) + "\n\n"
+		writeComment(&script, "Reason", remove.Reason)
+		writeComment(&script, "Matcher", remove.Matcher)
+		writeComment(&script, "Size", formatSize(removeSize))
+		script.WriteString("rm -rf -- ")
+		script.WriteString(shellQuote(remove.Path))
+		script.WriteString("\n\n")
 	}
 
-	return script
+	return script.String()
+}
+
+func writeComment(script *strings.Builder, label, value string) {
+	value = strings.ReplaceAll(value, "\r\n", "\n")
+	value = strings.ReplaceAll(value, "\r", "\n")
+
+	lines := strings.Split(value, "\n")
+	if len(lines) == 0 {
+		script.WriteString("# ")
+		script.WriteString(label)
+		script.WriteString(":\n")
+		return
+	}
+
+	script.WriteString("# ")
+	script.WriteString(label)
+	script.WriteString(": ")
+	script.WriteString(lines[0])
+	script.WriteString("\n")
+
+	for _, line := range lines[1:] {
+		script.WriteString("#   ")
+		script.WriteString(line)
+		script.WriteString("\n")
+	}
+}
+
+func shellQuote(value string) string {
+	if value == "" {
+		return "''"
+	}
+
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
 }
 
 func getSize(path string) (int64, error) {
@@ -57,13 +98,13 @@ func getSize(path string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func formatSize(size int64) string {
-	const (
-		KB = 1024
-		MB = KB * 1024
-		GB = MB * 1024
-	)
+const (
+	KB = 1024
+	MB = KB * 1024
+	GB = MB * 1024
+)
 
+func formatSize(size int64) string {
 	switch {
 	case size >= GB:
 		return formatFloat(float64(size)/GB) + " GB"
