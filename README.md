@@ -14,7 +14,6 @@ Features:
 - **Recipes are smart**, they can use advanced conditions like only deleting certain files if the app is not installed, or only deleting files older than a certain date
 - **Ship recipes with your app** to help users clean up files related to your app
 - **Open source**, contribute your own recipes and improvements to the project!
-- **Secure**, all file paths are sanitized to prevent command injection (and it doesn't delete files itself anyway)
 
 ## Installation
 
@@ -43,8 +42,23 @@ Current types are:
 - `soft`: deletes common files that are generally safe to delete, such as caches and logs
 - `hard`: deletes more files that may be less safe to delete, such as app support files that are no longer needed and old downloads
 
-Options:
-- `--force`: overwrites the generated script rather than failing if it exists already
+```bash
+$ culprit clean --help
+Evaluate all recipes and creates a shell script to clean up derived files
+
+Usage:
+  culprit clean [type] [flags]
+
+Flags:
+      --force           Overwrite the output file if it already exists
+  -h, --help            help for clean
+      --no-sizes        Skip calculating clearable sizes while generating the cleanup script (can speed up generation significantly)
+  -o, --output string   The output file to write the cleanup script to (default "cleanup.sh")
+
+Global Flags:
+      --no-tty    Disable TTY features like spinners and progress bars
+      --verbose   Enable verbose theming
+```
 
 ## Recipes
 
@@ -57,7 +71,55 @@ Recipes have a few required fields:
 - `type`: the type of the recipe, either `soft` or `hard`
 - `description`: a description of the recipe, used for logging and debugging
 
-Recipes then have two collection: targets and conditions.
+Recipes then have three collections: inputs, targets and conditions.
+
+Inputs collect values that targets and conditions can reference. The first supported input type is `path`:
+
+```toml
+[[inputs]]
+id = "project_path"
+kind = "path"
+prompt = "Project path"
+default = "~/Developer/my-project"
+placeholder = "~/Developer/my-project"
+
+[[targets]]
+reason = "Remove this project's local cache."
+kind = "absolute"
+path = "{{ .Inputs.project_path }}/.cache"
+```
+
+Input references use Go `text/template` syntax. Inputs are available on `.Inputs`, so an input with `id = "project_path"` is referenced as `{{ .Inputs.project_path }}`. Path input values expand environment variables and a leading `~`.
+
+Input IDs are scoped to the recipe. To share one answer across recipes, use `global_id`:
+
+```toml
+[[inputs]]
+id = "workspace"
+kind = "path"
+global_id = "projects_path"
+prompt = "Where do you keep your projects?"
+```
+
+Presets can populate common input fields, including `kind`, `prompt`, `default`, and `global_id`:
+
+```toml
+[[inputs]]
+id = "workspace"
+preset = "projects_path"
+```
+
+Targets still reference the recipe-scoped `id`:
+
+```toml
+path = "{{ .Inputs.workspace }}/culprit/.cache"
+```
+
+Command templates should shell-quote path-like inputs explicitly:
+
+```toml
+command = "tool clean {{ shellquote .Inputs.project_path }}"
+```
 
 Targets define the files that will be deleted if the recipe is run. You can view [the types file](./internal/recipe/types.go) for the full list of target types, eventually I will document them here.
 

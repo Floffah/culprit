@@ -1,24 +1,38 @@
 package shell
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/floffah/culprit/internal/recipe"
 )
 
+type RenderOptions struct {
+	IncludeSizes bool
+}
+
 func RemovesToBash(removes []recipe.Remove) string {
+	return RemovesToBashWithOptions(removes, RenderOptions{IncludeSizes: true})
+}
+
+func RemovesToBashWithOptions(removes []recipe.Remove, options RenderOptions) string {
 	var script strings.Builder
 
 	script.WriteString("#!/usr/bin/env bash\n")
 	script.WriteString("set -euo pipefail\n\n")
 
+	var removeSizes map[string]int64
+	if options.IncludeSizes {
+		removeSizes = getRemoveSizes(removes)
+	}
+
 	var previousRecipeName string
 	for _, remove := range removes {
-		removeSize := getRemoveSize(remove)
-
 		if remove.RecipeName != previousRecipeName {
 			script.WriteString("#")
 			writeComment(&script, "Recipe", remove.RecipeName)
@@ -28,7 +42,9 @@ func RemovesToBash(removes []recipe.Remove) string {
 
 		writeComment(&script, "Reason", remove.Reason)
 		writeComment(&script, "Matcher", remove.Matcher)
-		writeComment(&script, "Size", formatSize(removeSize))
+		if options.IncludeSizes {
+			writeComment(&script, "Size", formatSize(removeSizes[removeSizeKey(remove)]))
+		}
 		if remove.Command != "" {
 			script.WriteString(remove.Command)
 		} else {
@@ -39,6 +55,61 @@ func RemovesToBash(removes []recipe.Remove) string {
 	}
 
 	return script.String()
+}
+
+func getRemoveSizes(removes []recipe.Remove) map[string]int64 {
+	type job struct {
+		key    string
+		remove recipe.Remove
+	}
+
+	jobsByKey := make(map[string]job)
+	for _, remove := range removes {
+		key := removeSizeKey(remove)
+		if _, exists := jobsByKey[key]; exists {
+			continue
+		}
+		jobsByKey[key] = job{key: key, remove: remove}
+	}
+
+	jobs := make(chan job)
+	results := make(map[string]int64, len(jobsByKey))
+	var resultsMu sync.Mutex
+
+	workerCount := min(runtime.NumCPU(), len(jobsByKey))
+	if workerCount < 1 {
+		workerCount = 1
+	}
+
+	var wg sync.WaitGroup
+	for range workerCount {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for job := range jobs {
+				size := getRemoveSize(job.remove)
+				resultsMu.Lock()
+				results[job.key] = size
+				resultsMu.Unlock()
+			}
+		}()
+	}
+
+	for _, job := range jobsByKey {
+		jobs <- job
+	}
+	close(jobs)
+	wg.Wait()
+
+	return results
+}
+
+func removeSizeKey(remove recipe.Remove) string {
+	if remove.Command != "" {
+		return "command:" + remove.Command + "\x00" + strings.Join(remove.RelatedPaths, "\x00")
+	}
+
+	return "path:" + remove.Path
 }
 
 func getRemoveSize(remove recipe.Remove) int64 {
@@ -115,11 +186,15 @@ func getSize(path string) (int64, error) {
 
 	if fileInfo.IsDir() {
 		var totalSize int64 = 0
-		err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		err := filepath.WalkDir(path, func(_ string, entry fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if !info.IsDir() {
+			if !entry.IsDir() {
+				info, err := entry.Info()
+				if err != nil {
+					return err
+				}
 				totalSize += info.Size()
 			}
 			return nil

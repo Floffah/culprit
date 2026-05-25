@@ -13,6 +13,7 @@ import (
 )
 
 var isVerbose bool
+var NoTTY bool
 
 var rootCmd = &cobra.Command{
 	Use: "culprit",
@@ -44,9 +45,23 @@ func main() {
 	cobra.EnableTraverseRunHooks = true
 
 	rootCmd.PersistentFlags().BoolVar(&isVerbose, "verbose", false, "Enable verbose theming")
+	rootCmd.PersistentFlags().BoolVar(&NoTTY, "no-tty", false, "Disable TTY features like spinners and progress bars")
 	rootCmd.AddCommand(clean.NewCommand())
 
-	if err := fang.Execute(context.Background(), rootCmd); err != nil {
-		os.Exit(1)
+	for _, arg := range os.Args {
+		if arg == "--no-tty" {
+			NoTTY = true
+			break
+		}
+	}
+
+	if NoTTY {
+		if err := rootCmd.ExecuteContext(context.Background()); err != nil {
+			os.Exit(1)
+		}
+	} else {
+		if err := fang.Execute(context.Background(), rootCmd); err != nil {
+			os.Exit(1)
+		}
 	}
 }

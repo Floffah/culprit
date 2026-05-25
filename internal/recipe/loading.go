@@ -34,6 +34,11 @@ func LoadAllRecipes() ([]Recipe, error) {
 			return nil, err
 		}
 
+		recipe, err = ResolveInputPresets(recipe)
+		if err != nil {
+			return nil, err
+		}
+
 		ok, err := validateRecipe(recipe, entry.Name())
 		if err != nil {
 			return nil, err
@@ -65,6 +70,11 @@ func LoadAllRecipes() ([]Recipe, error) {
 
 		var recipe Recipe
 		if err := toml.Unmarshal(data, &recipe); err != nil {
+			return nil, err
+		}
+
+		recipe, err = ResolveInputPresets(recipe)
+		if err != nil {
 			return nil, err
 		}
 

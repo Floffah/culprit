@@ -3,6 +3,47 @@
  "$id": "https://github.com/floffah/culprit/internal/recipe/recipe",
  "$ref": "#/$defs/Recipe",
  "$defs": {
+  "Input": {
+   "properties": {
+    "id": {
+     "type": "string",
+     "description": "Stable identifier used to reference this input from targets."
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "path"
+     ],
+     "description": "The kind of input."
+    },
+    "prompt": {
+     "type": "string",
+     "description": "Prompt shown when collecting this input."
+    },
+    "description": {
+     "type": "string",
+     "description": "Additional help text shown below the prompt."
+    },
+    "default": {
+     "type": "string",
+     "description": "Default value used for this input."
+    },
+    "placeholder": {
+     "type": "string",
+     "description": "Placeholder shown when the input is empty."
+    }
+   },
+   "additionalProperties": false,
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "prompt",
+    "description",
+    "default",
+    "placeholder"
+   ]
+  },
   "Recipe": {
    "properties": {
     "name": {
@@ -22,6 +63,13 @@
      ],
      "description": "The type of the recipe."
     },
+    "inputs": {
+     "items": {
+      "$ref": "#/$defs/Input"
+     },
+     "type": "array",
+     "description": "Inputs required by the recipe."
+    },
     "targets": {
      "items": {
       "$ref": "#/$defs/Target"
@@ -36,6 +84,7 @@
     "name",
     "description",
     "type",
+    "inputs",
     "targets"
    ]
   },
@@ -48,13 +97,25 @@
     "kind": {
      "type": "string",
      "enum": [
-      "absolute"
+      "absolute",
+      "command"
      ],
      "description": "The kind of the target."
     },
     "path": {
      "type": "string",
      "description": "Absolute path to the file to be cleaned up"
+    },
+    "command": {
+     "type": "string",
+     "description": "The command to be executed to clean up the target. Only allowed with \"command\" kind."
+    },
+    "related_paths": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array",
+     "description": "List of related paths to be used to calculate clearable size. Only allowed with \"command\" kind."
     }
    },
    "additionalProperties": false,
@@ -62,7 +123,9 @@
    "required": [
     "reason",
     "kind",
-    "path"
+    "path",
+    "command",
+    "related_paths"
    ]
   }
  }

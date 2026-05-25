@@ -2,8 +2,6 @@ package recipe
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 )
 
@@ -22,7 +20,7 @@ func DeriveRecipeRemoves(recipe Recipe) ([]Remove, error) {
 	for _, target := range recipe.Targets {
 		switch target.Kind {
 		case TargetAbsolute:
-			matches, err := filepath.Glob(os.ExpandEnv(target.Path))
+			matches, err := globPaths(target.Path)
 			if err != nil {
 				return nil, err
 			}

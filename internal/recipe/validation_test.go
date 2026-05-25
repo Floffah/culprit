@@ -76,3 +76,51 @@ func TestValidateRecipeRejectsCommandTargetWithRM(t *testing.T) {
 	require.Error(t, err)
 	assert.False(t, ok)
 }
+
+func TestValidateRecipeAcceptsPathInput(t *testing.T) {
+	ok, err := validateRecipe(Recipe{
+		Name: "Path Input",
+		Type: TypeSoft,
+		Inputs: []Input{
+			{
+				ID:     "project_path",
+				Kind:   InputPath,
+				Prompt: "Project path",
+			},
+		},
+		Targets: []Target{
+			{
+				Reason: "test",
+				Kind:   TargetAbsolute,
+				Path:   "{{ .Inputs.project_path }}/cache",
+			},
+		},
+	}, "path-input.recipe.toml")
+
+	require.NoError(t, err)
+	assert.True(t, ok)
+}
+
+func TestValidateRecipeRejectsInvalidInputKind(t *testing.T) {
+	ok, err := validateRecipe(Recipe{
+		Name: "Path Input",
+		Type: TypeSoft,
+		Inputs: []Input{
+			{
+				ID:     "project_path",
+				Kind:   InputKind("mystery"),
+				Prompt: "Project path",
+			},
+		},
+		Targets: []Target{
+			{
+				Reason: "test",
+				Kind:   TargetAbsolute,
+				Path:   "{{ .Inputs.project_path }}/cache",
+			},
+		},
+	}, "path-input.recipe.toml")
+
+	require.Error(t, err)
+	assert.False(t, ok)
+}

@@ -9,9 +9,9 @@ Set Width 1400
 Set Height 600
 Set PlaybackSpeed 0.5
 
-Type "culprit clean -o cleanup.sh" Sleep 500ms Enter
-Wait+Screen /created/
-Sleep 200ms
+Type "culprit clean -o cleanup.sh --no-sizes" Sleep 500ms Enter
+Wait+Screen /projects/Sleep 1s Enter
+Wait+Screen /created/ Sleep 200ms
 
 Type "bat cleanup.sh" Sleep 500ms Enter
 

@@ -26,6 +26,26 @@ func validateRecipe(recipe Recipe, source string) (bool, error) {
 		return false, fmt.Errorf("recipe %q from %s must define at least one target", recipe.Name, source)
 	}
 
+	seenInputIDs := make(map[string]struct{})
+	for i, input := range recipe.Inputs {
+		if strings.TrimSpace(input.ID) == "" {
+			return false, fmt.Errorf("recipe %q input %d must define id", recipe.Name, i)
+		}
+		if _, exists := seenInputIDs[input.ID]; exists {
+			return false, fmt.Errorf("recipe %q input %d duplicates id %q", recipe.Name, i, input.ID)
+		}
+		seenInputIDs[input.ID] = struct{}{}
+
+		switch input.Kind {
+		case InputPath:
+			if strings.TrimSpace(input.Prompt) == "" {
+				return false, fmt.Errorf("recipe %q input %q must define prompt", recipe.Name, input.ID)
+			}
+		default:
+			return false, fmt.Errorf("recipe %q input %q has invalid kind %q", recipe.Name, input.ID, input.Kind)
+		}
+	}
+
 	for i, target := range recipe.Targets {
 		if strings.TrimSpace(target.Reason) == "" {
 			return false, fmt.Errorf("recipe %q target %d must define reason", recipe.Name, i)

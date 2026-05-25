@@ -1,0 +1,12 @@
+name = "Node Modules"
+description = "Removes unnecessary node_modules folders from the system."
+type = "soft"
+
+[[inputs]]
+id = "projects_path"
+preset = "projects_path"
+
+[[targets]]
+reason = "Remove node_modules folders from your projects. These folders can take up a lot of space, and they can be easily recreated by running `npm install` or equivalent in your projects."
+kind = "absolute"
+path = "{{ .Inputs.projects_path }}/**/node_modules"

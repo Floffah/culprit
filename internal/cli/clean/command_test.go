@@ -32,6 +32,15 @@ func TestFilterRecipesByType(t *testing.T) {
 	assert.Equal(t, "Soft Two", filtered[1].Name)
 }
 
+func TestNewCommandDefinesNoSizesFlag(t *testing.T) {
+	cmd := NewCommand()
+
+	flag := cmd.Flags().Lookup("no-sizes")
+
+	require.NotNil(t, flag)
+	assert.Equal(t, "false", flag.DefValue)
+}
+
 func TestWriteScriptFileCreatesNewFile(t *testing.T) {
 	outputPath := filepath.Join(t.TempDir(), "cleanup.sh")
 

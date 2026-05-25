@@ -68,3 +68,17 @@ func TestRemovesToBashWritesCommandAndSizesRelatedPaths(t *testing.T) {
 	assert.Contains(t, script, "\ngo clean -cache\n")
 	assert.NotContains(t, script, "rm -rf --")
 }
+
+func TestRemovesToBashCanOmitSizes(t *testing.T) {
+	script := RemovesToBashWithOptions([]recipe.Remove{
+		{
+			RecipeName: "Cache",
+			Reason:     "test",
+			Matcher:    "/tmp/cache",
+			Path:       "/tmp/cache",
+		},
+	}, RenderOptions{IncludeSizes: false})
+
+	assert.NotContains(t, script, "# Size:")
+	assert.Contains(t, script, "rm -rf -- '/tmp/cache'")
+}
