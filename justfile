@@ -1,3 +1,5 @@
+set shell := ["bash", "-uc"]
+
 alias gen := generate
 
 default:
@@ -14,7 +16,6 @@ test-integration:
 	go run cmds/culprit/culprit.go --verbose clean hard --force -o cleanup-hard.sh
 	go run cmds/culprit/culprit.go --verbose clean culprit --force -o cleanup-culprit.sh
 
-
 lint:
 	golangci-lint run
 
@@ -24,3 +25,10 @@ format:
 
 generate:
 	go generate ./...
+
+vhs: build
+	#!/bin/bash
+	rm cleanup.sh || true
+	export PATH="$(pwd)/dist:$PATH"
+	export BAT_THEME="Catppuccin Mocha"
+	vhs assets/demo.tape

@@ -5,6 +5,8 @@ Culprit is a command line tool that helps you delete common and known files that
 > [!IMPORTANT]
 > Culprit is currently in early development, so expect bugs and breaking changes. It also has very few built-in recipes at the moment, but I will be adding more soon and contributions are very welcome!
 
+![Culprit in action](./assets/demo.gif)
+
 Features:
 - **Culprit will never actually delete files**, it generates a bash script with `rm` calls that you can review and run yourself
 - **Highly extendable**, define rules with [recipes](#recipes)
