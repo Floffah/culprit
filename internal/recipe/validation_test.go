@@ -40,3 +40,39 @@ func TestValidateRecipeRejectsInvalidTargetKind(t *testing.T) {
 	require.Error(t, err)
 	assert.False(t, ok)
 }
+
+func TestValidateRecipeAcceptsCommandTarget(t *testing.T) {
+	ok, err := validateRecipe(Recipe{
+		Name: "Command Target",
+		Type: TypeSoft,
+		Targets: []Target{
+			{
+				Reason:       "test",
+				Kind:         TargetCommand,
+				Command:      "go clean -cache && terraform version",
+				RelatedPaths: []string{"/tmp/cache"},
+			},
+		},
+	}, "command.recipe.toml")
+
+	require.NoError(t, err)
+	assert.True(t, ok)
+}
+
+func TestValidateRecipeRejectsCommandTargetWithRM(t *testing.T) {
+	ok, err := validateRecipe(Recipe{
+		Name: "Command Target",
+		Type: TypeSoft,
+		Targets: []Target{
+			{
+				Reason:       "test",
+				Kind:         TargetCommand,
+				Command:      "go clean -cache && rm -rf /tmp/cache",
+				RelatedPaths: []string{"/tmp/cache"},
+			},
+		},
+	}, "command.recipe.toml")
+
+	require.Error(t, err)
+	assert.False(t, ok)
+}

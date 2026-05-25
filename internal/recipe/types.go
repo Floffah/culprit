@@ -19,12 +19,13 @@ type TargetKind string
 
 const (
 	TargetAbsolute TargetKind = "absolute"
+	TargetCommand  TargetKind = "command"
 )
 
 type Target struct {
-	Reason string     `toml:"reason" jsonschema:"description=The reason why this target should be cleaned up."`
-	Kind   TargetKind `toml:"kind" jsonschema:"description=The kind of the target.,enum=absolute"`
-	// Absolute path to the file to be cleaned up, supports glob patterns
-	// Only allowed with "absolute" kind
-	Path string `toml:"path" jsonschema:"description=Absolute path to the file to be cleaned up, supports glob patterns. Only allowed with \"absolute\" kind."`
+	Reason       string     `toml:"reason" jsonschema:"description=The reason why this target should be cleaned up."`
+	Kind         TargetKind `toml:"kind" jsonschema:"description=The kind of the target.,enum=absolute,enum=command"`
+	Path         string     `toml:"path" jsonschema:"description=Absolute path to the file to be cleaned up, supports glob patterns. Only allowed with \"absolute\" kind."`
+	Command      string     `toml:"command" jsonschema:"description=The command to be executed to clean up the target. Only allowed with \"command\" kind."`
+	RelatedPaths []string   `toml:"related_paths" jsonschema:"description=List of related paths to be used to calculate clearable size. Only allowed with \"command\" kind."`
 }

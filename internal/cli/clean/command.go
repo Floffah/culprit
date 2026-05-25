@@ -23,7 +23,7 @@ func NewCommand() *cobra.Command {
 		Args:  cobra.MatchAll(cobra.OnlyValidArgs),
 		RunE:  RunE,
 	}
-	cmd.Flags().String("output", "cleanup.sh", "The output file to write the cleanup script to")
+	cmd.Flags().StringP("output", "o", "cleanup.sh", "The output file to write the cleanup script to")
 	cmd.Flags().Bool("force", false, "Overwrite the output file if it already exists")
 
 	return cmd

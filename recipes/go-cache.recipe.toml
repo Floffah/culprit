@@ -1,0 +1,9 @@
+name = "Go Cache"
+description = "Removes unnecessary Go cache files from the system."
+type = "soft"
+
+[[targets]]
+reason = "Remove Go cache files. Go will download these again when you run `go mod tidy` in your projects."
+kind = "command"
+command = "go clean -cache && go clean -modcache"
+related_paths = ["$HOME/go/pkg/mod/cache", "$HOME/go/pkg/mod/download", "$HOME/Library/Caches/go-build"]

@@ -17,10 +17,7 @@ func RemovesToBash(removes []recipe.Remove) string {
 
 	var previousRecipeName string
 	for _, remove := range removes {
-		removeSize, err := getSize(remove.Path)
-		if err != nil {
-			removeSize = 0
-		}
+		removeSize := getRemoveSize(remove)
 
 		if remove.RecipeName != previousRecipeName {
 			script.WriteString("#")
@@ -32,12 +29,49 @@ func RemovesToBash(removes []recipe.Remove) string {
 		writeComment(&script, "Reason", remove.Reason)
 		writeComment(&script, "Matcher", remove.Matcher)
 		writeComment(&script, "Size", formatSize(removeSize))
-		script.WriteString("rm -rf -- ")
-		script.WriteString(shellQuote(remove.Path))
+		if remove.Command != "" {
+			script.WriteString(remove.Command)
+		} else {
+			script.WriteString("rm -rf -- ")
+			script.WriteString(shellQuote(remove.Path))
+		}
 		script.WriteString("\n\n")
 	}
 
 	return script.String()
+}
+
+func getRemoveSize(remove recipe.Remove) int64 {
+	if remove.Command != "" {
+		return getRelatedPathsSize(remove.RelatedPaths)
+	}
+
+	removeSize, err := getSize(remove.Path)
+	if err != nil {
+		return 0
+	}
+
+	return removeSize
+}
+
+func getRelatedPathsSize(paths []string) int64 {
+	var totalSize int64
+
+	for _, path := range paths {
+		matches, err := filepath.Glob(os.ExpandEnv(path))
+		if err != nil {
+			continue
+		}
+		for _, match := range matches {
+			size, err := getSize(match)
+			if err != nil {
+				continue
+			}
+			totalSize += size
+		}
+	}
+
+	return totalSize
 }
 
 func writeComment(script *strings.Builder, label, value string) {

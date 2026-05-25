@@ -1,11 +1,14 @@
 package shell
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/floffah/culprit/internal/recipe"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRemovesToBashCommentsEveryMetadataLine(t *testing.T) {
@@ -43,4 +46,25 @@ func TestRemovesToBashShellQuotesPath(t *testing.T) {
 
 	want := "rm -rf -- '/tmp/it'\"'\"'s a cache'"
 	assert.Contains(t, script, want)
+}
+
+func TestRemovesToBashWritesCommandAndSizesRelatedPaths(t *testing.T) {
+	cacheDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "one"), []byte("12345"), 0644))
+	require.NoError(t, os.Mkdir(filepath.Join(cacheDir, "nested"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(cacheDir, "nested", "two"), []byte("1234567"), 0644))
+
+	script := RemovesToBash([]recipe.Remove{
+		{
+			RecipeName:   "Go Cache",
+			Reason:       "Clean Go caches",
+			Matcher:      "go clean -cache",
+			Command:      "go clean -cache",
+			RelatedPaths: []string{cacheDir},
+		},
+	})
+
+	assert.Contains(t, script, "# Size: 12.0 B")
+	assert.Contains(t, script, "\ngo clean -cache\n")
+	assert.NotContains(t, script, "rm -rf --")
 }

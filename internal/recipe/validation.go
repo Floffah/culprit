@@ -36,6 +36,21 @@ func validateRecipe(recipe Recipe, source string) (bool, error) {
 			if strings.TrimSpace(target.Path) == "" {
 				return false, fmt.Errorf("recipe %q target %d must define path", recipe.Name, i)
 			}
+		case TargetCommand:
+			if strings.TrimSpace(target.Command) == "" {
+				return false, fmt.Errorf("recipe %q target %d must define command", recipe.Name, i)
+			}
+			if commandIncludesRM(target.Command) {
+				return false, fmt.Errorf("recipe %q target %d command must not include rm", recipe.Name, i)
+			}
+			if len(target.RelatedPaths) == 0 {
+				return false, fmt.Errorf("recipe %q target %d must define related_paths", recipe.Name, i)
+			}
+			for relatedPathIndex, relatedPath := range target.RelatedPaths {
+				if strings.TrimSpace(relatedPath) == "" {
+					return false, fmt.Errorf("recipe %q target %d related_paths entry %d must not be empty", recipe.Name, i, relatedPathIndex)
+				}
+			}
 		default:
 			return false, fmt.Errorf("recipe %q target %d has invalid kind %q", recipe.Name, i, target.Kind)
 		}
